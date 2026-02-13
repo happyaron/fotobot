@@ -137,17 +137,25 @@ class ExifToolWorker(ExifWorker):
         return f"f/{aperture}" if aperture else "Unknown Aperture"
     
     def get_dof_in_35mm(self) -> str:
-        focal_length = self.get_tag_with_log("FocalLength")
-        focal_length_35mm = self.get_tag_with_log("FocalLengthIn35mmFormat")
-        aperture = self.get_tag_with_log("Aperture"))
+        f_focal_length = None
+        f_focal_length_35mm = None
+        f_aperture = None
+
+        if (focal_length := self.get_tag_with_log("FocalLength")) is not None:
+            f_focal_length = float(focal_length)
+        if (focal_length_35mm := self.get_tag_with_log("FocalLengthIn35mmFormat")) is not None:
+            f_focal_length_35mm = float(focal_length_35mm)
+        elif (focal_length_35mm := self.get_tag_with_log("FocalLength35efl")) is not None:
+            f_focal_length_35mm = float(focal_length_35mm)
+        if (aperture := self.get_tag_with_log("Aperture")) is not None:
+            f_aperture = float(aperture)
 
         dof_in_35mm = None
 
-        if aperture and focal_length and focal_length_35mm:
-            dof_in_35mm = round(
-                    float(focal_length_35mm) / float(focal_length) * float(aperture), 1)
+        if f_aperture and f_focal_length and f_focal_length_35mm:
+            dof_in_35mm = round(f_focal_length_35mm / f_focal_length * f_aperture, 1)
 
-        return f"f/{dof_in_35mm}" if dof_in_35mm else "Unknown Depth of Field in 35mm format
+        return f"f/{dof_in_35mm}" if dof_in_35mm else "Unknown Depth of Field in 35mm format"
 
     def get_shutter_speed(self) -> str:
         shutter_speed = self.get_tag_with_log("ShutterSpeed")
